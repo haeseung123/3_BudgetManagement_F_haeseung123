@@ -9,9 +9,10 @@ import { AtGuard } from 'src/auth/guard/access.token.guard';
 import { GetUser } from 'src/global/decorators/get-user.decorator';
 import { User } from './entities/user.entity';
 import { RtGuard } from 'src/auth/guard/refresh.token.guard';
+import { JwtExceptionFilter } from 'src/global/filters/jwt-exception.filter';
 
 @Controller('users')
-@UseFilters(HttpExceptionFilter)
+@UseFilters(HttpExceptionFilter, JwtExceptionFilter)
 export class UsersController {
 	constructor(private readonly usersService: UsersService) {}
 
