@@ -6,6 +6,8 @@ import { UsersModule } from './users/users.module';
 import { AuthModule } from './auth/auth.module';
 import { CategoryModule } from './category/category.module';
 import jwtConfiguration from './global/configs/jwt.configuration';
+import { APP_FILTER } from '@nestjs/core';
+import { NotFoundExceiptionFilter } from './global/filters/not-found-exception.filter';
 
 @Module({
 	imports: [
@@ -20,6 +22,12 @@ import jwtConfiguration from './global/configs/jwt.configuration';
 		UsersModule,
 		AuthModule,
 		CategoryModule,
+	],
+	providers: [
+		{
+			provide: APP_FILTER,
+			useClass: NotFoundExceiptionFilter,
+		},
 	],
 })
 export class AppModule {}
