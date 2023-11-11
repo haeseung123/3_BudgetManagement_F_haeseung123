@@ -4,6 +4,7 @@ import { DatabaseModule } from './database/database.module';
 import { validationSchema } from './global/configs/validation.schema';
 import { UsersModule } from './users/users.module';
 import { AuthModule } from './auth/auth.module';
+import { CategoryModule } from './category/category.module';
 import jwtConfiguration from './global/configs/jwt.configuration';
 
 @Module({
@@ -18,6 +19,7 @@ import jwtConfiguration from './global/configs/jwt.configuration';
 		DatabaseModule,
 		UsersModule,
 		AuthModule,
+		CategoryModule,
 	],
 })
 export class AppModule {}
