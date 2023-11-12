@@ -8,6 +8,7 @@ import { CategoryModule } from './category/category.module';
 import jwtConfiguration from './global/configs/jwt.configuration';
 import { APP_FILTER } from '@nestjs/core';
 import { NotFoundExceiptionFilter } from './global/filters/not-found-exception.filter';
+import { BudgetsModule } from './budgets/budgets.module';
 
 @Module({
 	imports: [
@@ -22,6 +23,7 @@ import { NotFoundExceiptionFilter } from './global/filters/not-found-exception.f
 		UsersModule,
 		AuthModule,
 		CategoryModule,
+		BudgetsModule,
 	],
 	providers: [
 		{
