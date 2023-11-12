@@ -1,6 +1,6 @@
 export enum BudgetCategory {
 	EDUCATION = 'education',
-	LIFE = 'life',
+	LIVING = 'living',
 	FOOD = 'food',
 	HEALTH = 'health',
 	CULTURE = 'culture',
