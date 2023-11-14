@@ -43,7 +43,7 @@ export class BudgetsService {
 			monthlyBudget = this.monthlyBudgetRepository.create({
 				user: user,
 				year_month: yearMonth,
-				total_amount: 0,
+				total_amount: totalAmount,
 			});
 			await this.monthlyBudgetRepository.save(monthlyBudget);
 		}
@@ -91,10 +91,10 @@ export class BudgetsService {
 			return this.createOrUpdateBudget(category, monthlyBudget, amount);
 		});
 
-		const results = await Promise.all(budgetPromises);
+		const categoriesAmount = await Promise.all(budgetPromises);
 
 		return {
-			results,
+			categoriesAmount,
 			total_amount: totalAmount,
 		};
 	}

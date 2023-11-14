@@ -1,4 +1,4 @@
-import { Body, Controller, Post, UseGuards } from '@nestjs/common';
+import { Body, Controller, Post, UseFilters, UseGuards } from '@nestjs/common';
 import { BudgetsService } from './budgets.service';
 import { AtGuard } from 'src/auth/guard/access.token.guard';
 import { CreateBudgetDto } from './dto/create-budget.dto';
@@ -6,8 +6,10 @@ import { GetUser } from 'src/global/decorators/get-user.decorator';
 import { User } from 'src/users/entities/user.entity';
 import { ResponseMessage } from 'src/global/decorators/response-key.decorator';
 import { BudgetResponseMessage } from './classes/budget.response.message';
+import { JwtExceptionFilter } from 'src/global/filters/jwt-exception.filter';
 
 @Controller('budgets')
+@UseFilters(JwtExceptionFilter)
 export class BudgetsController {
 	constructor(private readonly budgetsService: BudgetsService) {}
 

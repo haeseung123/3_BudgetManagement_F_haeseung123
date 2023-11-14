@@ -1,9 +1,9 @@
-import { ExceptionFilter, Catch, NotFoundException, ArgumentsHost } from '@nestjs/common';
+import { ExceptionFilter, Catch, ArgumentsHost, NotAcceptableException } from '@nestjs/common';
 import { Response } from 'express';
 
-@Catch(NotFoundException)
-export class NotFoundExceptionFilter implements ExceptionFilter {
-	catch(exception: NotFoundException, host: ArgumentsHost) {
+@Catch(NotAcceptableException)
+export class NotAcceptableExceptionFilter implements ExceptionFilter {
+	catch(exception: any, host: ArgumentsHost) {
 		const ctx = host.switchToHttp();
 		const response = ctx.getResponse<Response>();
 		const request = ctx.getRequest<Request>();
@@ -14,7 +14,7 @@ export class NotFoundExceptionFilter implements ExceptionFilter {
 			success: false,
 			statusCode: status,
 			error: exceptionObj['error'],
-			message: '존재하지 않는 페이지입니다.',
+			message: exceptionObj['message'],
 			timestamp: new Date().toISOString(),
 			path: request.url,
 		});
