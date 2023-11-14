@@ -94,6 +94,13 @@ export class ExpendsService {
 		return totalAmount;
 	}
 
+	private async updateMonthlyExpendTotalAmount(monthlyExpend: MonthlyExpend, yearMonth: number): Promise<void> {
+		const totalAmount = await this.calculateTotalAmount(0, monthlyExpend, yearMonth);
+		monthlyExpend.total_amount = totalAmount;
+
+		await this.monthlyExpendRepository.save(monthlyExpend);
+	}
+
 	async createExpend(user: User, createExpendDto: CreateExpendDto) {
 		const { date, title, content, amount, payment_method, excluded, category } = createExpendDto;
 
@@ -143,14 +150,11 @@ export class ExpendsService {
 
 		const savedExpend = await this.expendRepository.save(joinExpend);
 
-		const totalAmount = await this.calculateTotalAmount(0, monthlyExpend, yearMonth);
-		monthlyExpend.total_amount = totalAmount;
-
-		const savedMonthlyExpend = await this.monthlyExpendRepository.save(monthlyExpend);
+		await this.updateMonthlyExpendTotalAmount(monthlyExpend, yearMonth);
 
 		return {
 			savedExpend,
-			savedMonthlyExpend,
+			savedMonthlyExpend: monthlyExpend,
 		};
 	}
 
@@ -166,45 +170,43 @@ export class ExpendsService {
 
 		await this.expendRepository.remove(expend);
 
-		const totalAmount = await this.calculateTotalAmount(0, monthlyExpend, yearMonth);
-		monthlyExpend.total_amount = totalAmount;
-
-		await this.monthlyExpendRepository.save(monthlyExpend);
+		await this.updateMonthlyExpendTotalAmount(monthlyExpend, yearMonth);
 	}
 
-	async getALLData(month: number, user: User, min: number, max: number) {
-		const monthData = await this.findMonthlyExpend(user, month);
-		// console.log(monthData);
-		const totalAmount = monthData.total_amount;
+	private getRangeData(min: number, max: number, data: Expend) {
+		const rangeAmount = data.amount;
+		return rangeAmount >= min && rangeAmount <= max ? data : null;
+	}
 
-		const datas = await this.expendRepository.find({
-			where: {
-				monthlyExpend: { id: monthData.id },
-			},
-			relations: ['category'],
-		});
-
-		// console.log(datas);
-
-		const filterData = datas
-			.map((expend) => this.getRangeData(min, max, expend))
-			.filter((rangeData) => rangeData !== undefined);
-
+	private async getFilteredData(datas: Expend[], min: number, max: number) {
+		const filterData = datas.map((expend) => this.getRangeData(min, max, expend)).filter(Boolean);
 		const allCategorySumData = await this.getAllCategoryData(filterData);
+		const sumFilterData = filterData.reduce((acc, c) => acc + c.amount, 0);
 
-		const sumFilterData = filterData.reduce((acc, c) => (acc += c.amount), 0);
-
-		return {
-			data: {
-				filterData,
-				allCategorySumData,
-			},
-			meta: {
-				sumFilterData,
-				totalAmount,
-			},
-		};
+		return { filterData, allCategorySumData, sumFilterData };
 	}
+
+	// async getALLData(month: number, user: User, min: number, max: number) {
+
+	// 	const filterData = datas
+	// 		.map((expend) => this.getRangeData(min, max, expend))
+	// 		.filter((rangeData) => rangeData !== undefined);
+
+	// 	const allCategorySumData = await this.getAllCategoryData(filterData);
+
+	// 	const sumFilterData = filterData.reduce((acc, c) => (acc += c.amount), 0);
+
+	// 	return {
+	// 		data: {
+	// 			filterData,
+	// 			allCategorySumData,
+	// 		},
+	// 		meta: {
+	// 			sumFilterData,
+	// 			totalAmount,
+	// 		},
+	// 	};
+	// }
 
 	async getAllCategoryData(filterData: Expend[]) {
 		const categorySumData = filterData.reduce((acc, expend) => {
@@ -222,15 +224,26 @@ export class ExpendsService {
 		return categorySumData;
 	}
 
-	async getCategoryData(category: BudgetCategory, user: User, month: number, min: number, max: number) {
-		console.log(category);
-		const monthData = await this.findMonthlyExpend(user, month);
-		// console.log(monthData);
-		const totalAmount = monthData.total_amount;
-
+	async getCategoryData(datas: Expend[], category: BudgetCategory, min: number, max: number) {
 		const foundCategory = await this.findCategory({ name: category });
-		console.log(foundCategory);
 		const categoryId = foundCategory.id;
+
+		const categoryData = datas.filter((v) => v.category.id === categoryId);
+
+		const filterData = categoryData.map((expend) => this.getRangeData(min, max, expend)).filter(Boolean);
+
+		const allCategorySumData = await this.getAllCategoryData(filterData);
+
+		return {
+			filterData,
+			allCategorySumData,
+		};
+	}
+
+	async getExpend(getExpendDto: GetExpendDto, user: User) {
+		const { month, min, max, category } = getExpendDto;
+		const monthData = await this.findMonthlyExpend(user, month);
+		const totalAmount = monthData.total_amount;
 
 		const datas = await this.expendRepository.find({
 			where: {
@@ -239,42 +252,14 @@ export class ExpendsService {
 			relations: ['category'],
 		});
 
-		// console.log(datas);
+		if (category) return await this.getCategoryData(datas, category, min, max);
 
-		const categoryData = datas.filter((v) => v.category.id === categoryId);
-		// console.log(categoryData);
-
-		const filterData = categoryData
-			.map((expend) => this.getRangeData(min, max, expend))
-			.filter((rangeData) => rangeData !== undefined);
-
-		// console.log(filterData);
-
-		const allCategorySumData = await this.getAllCategoryData(filterData);
-		console.log(allCategorySumData);
-
+		const allData = await this.getFilteredData(datas, min, max);
 		return {
-			data: {
-				filterData,
-				allCategorySumData,
-			},
+			allData,
 			meta: {
 				totalAmount,
 			},
 		};
-	}
-
-	getRangeData(min: number, max: number, data: Expend) {
-		const rangeAmount = data.amount;
-
-		if (rangeAmount >= min && rangeAmount <= max) return data;
-	}
-
-	async getExpend(getExpendDto: GetExpendDto, user: User) {
-		const { month, min, max, category } = getExpendDto;
-
-		if (category) return await this.getCategoryData(category, user, month, min, max);
-
-		return await this.getALLData(month, user, min, max);
 	}
 }
