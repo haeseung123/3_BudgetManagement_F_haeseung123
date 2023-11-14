@@ -11,5 +11,6 @@ import { Category } from 'src/category/entities/category.entity';
 	imports: [TypeOrmModule.forFeature([Budget, MonthlyBudget, User, Category])],
 	controllers: [BudgetsController],
 	providers: [BudgetsService],
+	exports: [BudgetsService],
 })
 export class BudgetsModule {}
