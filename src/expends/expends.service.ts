@@ -186,28 +186,6 @@ export class ExpendsService {
 		return { filterData, allCategorySumData, sumFilterData };
 	}
 
-	// async getALLData(month: number, user: User, min: number, max: number) {
-
-	// 	const filterData = datas
-	// 		.map((expend) => this.getRangeData(min, max, expend))
-	// 		.filter((rangeData) => rangeData !== undefined);
-
-	// 	const allCategorySumData = await this.getAllCategoryData(filterData);
-
-	// 	const sumFilterData = filterData.reduce((acc, c) => (acc += c.amount), 0);
-
-	// 	return {
-	// 		data: {
-	// 			filterData,
-	// 			allCategorySumData,
-	// 		},
-	// 		meta: {
-	// 			sumFilterData,
-	// 			totalAmount,
-	// 		},
-	// 	};
-	// }
-
 	async getAllCategoryData(filterData: Expend[]) {
 		const categorySumData = filterData.reduce((acc, expend) => {
 			const categoryName = expend.category.name;
