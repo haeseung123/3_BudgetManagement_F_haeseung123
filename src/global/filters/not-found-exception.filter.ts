@@ -2,7 +2,7 @@ import { ExceptionFilter, Catch, NotFoundException, ArgumentsHost } from '@nestj
 import { Response } from 'express';
 
 @Catch(NotFoundException)
-export class NotFoundExceiptionFilter implements ExceptionFilter {
+export class NotFoundExceptionFilter implements ExceptionFilter {
 	catch(exception: NotFoundException, host: ArgumentsHost) {
 		const ctx = host.switchToHttp();
 		const response = ctx.getResponse<Response>();
