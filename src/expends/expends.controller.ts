@@ -23,11 +23,12 @@ import { HttpExceptionFilter } from 'src/global/filters/http-exception.filter';
 import { ResponseMessage } from 'src/global/decorators/response-key.decorator';
 import { ExpendResponseMessage } from './classes/expend.response.message';
 import { GetExpendDto } from './dto/get-expend.dto';
+import { ConsultsService } from './consults.service';
 
 @Controller('expends')
 @UseFilters(JwtExceptionFilter, HttpExceptionFilter)
 export class ExpendsController {
-	constructor(private readonly expendsService: ExpendsService) {}
+	constructor(private readonly expendsService: ExpendsService, private readonly consultsService: ConsultsService) {}
 
 	@Post()
 	@UseGuards(AtGuard)
@@ -60,4 +61,14 @@ export class ExpendsController {
 	async getExpend(@Query() getExpendDto: GetExpendDto, @GetUser() user: User) {
 		return await this.expendsService.getExpend(getExpendDto, user);
 	}
+
+	@Get('consults/recommend')
+	@UseGuards(AtGuard)
+	async getRecommendation(@GetUser() user: User) {
+		return await this.consultsService.generateRecommendation(user);
+	}
+
+	@Get('consults/today')
+	@UseGuards(AtGuard)
+	async getTodayExpend() {}
 }

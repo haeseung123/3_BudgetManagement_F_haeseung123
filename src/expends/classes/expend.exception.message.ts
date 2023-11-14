@@ -16,4 +16,9 @@ export class ExpendException {
 		message: '사용자의 지출이 존재하지 않습니다.',
 		error: ExceptionObjError.NOT_FOUND,
 	};
+
+	static BUDGET_NOT_EXISITS: ExceptionObj = {
+		message: '예산이 존재하지 않습니다.',
+		error: ExceptionObjError.NOT_FOUND,
+	};
 }

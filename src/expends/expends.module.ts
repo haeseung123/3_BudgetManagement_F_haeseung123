@@ -6,10 +6,14 @@ import { Expend } from './entities/expend.entity';
 import { MonthlyExpend } from './entities/monthly_expend.entity';
 import { User } from 'src/users/entities/user.entity';
 import { Category } from 'src/category/entities/category.entity';
+import { ConsultsService } from './consults.service';
+import { Budget } from 'src/budgets/entities/budget.entity';
+import { MonthlyBudget } from 'src/budgets/entities/monthly_budget.entity';
+import { BudgetsService } from 'src/budgets/budgets.service';
 
 @Module({
-	imports: [TypeOrmModule.forFeature([Expend, MonthlyExpend, User, Category])],
+	imports: [TypeOrmModule.forFeature([Expend, MonthlyExpend, User, Category, Budget, MonthlyBudget])],
 	controllers: [ExpendsController],
-	providers: [ExpendsService],
+	providers: [ExpendsService, ConsultsService, BudgetsService],
 })
 export class ExpendsModule {}
