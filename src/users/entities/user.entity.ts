@@ -1,5 +1,5 @@
 import { Exclude } from 'class-transformer';
-import { BaseEntity } from 'src/global/entities/base.entity';
+import { BaseEntity } from '../../global/entities/base.entity';
 import { Column, Entity } from 'typeorm';
 
 @Entity()
