@@ -2,12 +2,9 @@ import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Expend } from './entities/expend.entity';
 import { Repository } from 'typeorm';
-import { MonthlyExpend } from './entities/monthly_expend.entity';
-import { Category } from 'src/category/entities/category.entity';
 import { ExpendsService } from './expends.service';
 import { User } from 'src/users/entities/user.entity';
 import { Budget } from 'src/budgets/entities/budget.entity';
-import { MonthlyBudget } from 'src/budgets/entities/monthly_budget.entity';
 import { BudgetsService } from 'src/budgets/budgets.service';
 import { ConsultMessage } from './enums/consult-message.enum';
 import { ExpendException } from './classes/expend.exception.message';
@@ -17,14 +14,10 @@ export class ConsultsService {
 	constructor(
 		@InjectRepository(Expend)
 		private readonly expendRepository: Repository<Expend>,
-		@InjectRepository(MonthlyExpend)
-		private readonly monthlyExpendRepository: Repository<MonthlyExpend>,
+
 		@InjectRepository(Budget)
 		private readonly budgetRepository: Repository<Budget>,
-		@InjectRepository(MonthlyBudget)
-		private readonly monthlyBudgetRepository: Repository<MonthlyBudget>,
-		@InjectRepository(Category)
-		private readonly categoryRepository: Repository<Category>,
+
 		private readonly expendsService: ExpendsService,
 		private readonly budgetsService: BudgetsService,
 	) {}
@@ -101,5 +94,79 @@ export class ConsultsService {
 		if (remainingBudget > 0) return ConsultMessage.VERY_GOOD;
 		else if (remainingBudget === 0) return ConsultMessage.GOOD;
 		else return ConsultMessage.BAD;
+	}
+
+	private dailyCategoryBudget(budgets: Budget[], daysInCurrentMonth: number) {
+		const optimalCategoryBudgets = budgets.map((budget) => {
+			const categoryName = budget.category.name;
+			const optimalBudget = budget.amount === 0 ? 0 : Math.round(budget.amount / daysInCurrentMonth);
+
+			return { categoryName, optimalBudget };
+		});
+
+		return optimalCategoryBudgets;
+	}
+
+	private calculateRiskPercentage(budgetAmount: number, expendAmount: number) {
+		if (budgetAmount === 0) return expendAmount;
+
+		const exceedPercentage =
+			expendAmount > budgetAmount ? Math.round(((expendAmount - budgetAmount) / budgetAmount) * 100) : 0;
+
+		return exceedPercentage;
+	}
+
+	async getTodayExpend(user: User) {
+		const today = new Date();
+		const dateParts = today.toISOString().split('T')[0].split('-');
+		const [year, month, day] = dateParts.map((v) => parseInt(v));
+		const yearMonth = year * 100 + month;
+
+		const daysInCurrentMonth = new Date(year, month, 0).getDate();
+
+		// 오늘 카테고리별 지출 금액
+		const monthlyExpend = await this.expendsService.findMonthlyExpend(user, yearMonth);
+		if (!monthlyExpend) throw new NotFoundException(ExpendException.EXPEND_NOT_EXISITS);
+
+		const todayExpend = await this.expendRepository.find({
+			where: {
+				monthlyExpend: { id: monthlyExpend.id },
+				day: day,
+			},
+			relations: ['category'],
+		});
+
+		const todayAmount = todayExpend.reduce((acc, expend) => (acc += expend.amount), 0);
+
+		// 오늘 적정 금액
+		const monthlyBudget = await this.budgetsService.findMonthlyBudget(user, yearMonth);
+		const budgets = await this.budgetRepository.find({
+			where: {
+				monthlyBudget: { id: monthlyBudget.id },
+			},
+			relations: ['category'],
+		});
+
+		const todayOptimalBudget = this.dailyCategoryBudget(budgets, daysInCurrentMonth);
+
+		// 오늘 지출 위험도
+		const todayRiskPercentage: any[] = [];
+		budgets.forEach((budget) => {
+			const categoryName = budget.category.name;
+			const matchingExpend = todayExpend.find((expend) => expend.category.name === categoryName);
+
+			if (matchingExpend) {
+				const riskPercentage = this.calculateRiskPercentage(budget.amount, matchingExpend.amount);
+				todayRiskPercentage.push({ category: categoryName, riskPercentage });
+			}
+			todayRiskPercentage.push({ category: categoryName, riskPercentage: 0 });
+		});
+
+		return {
+			todayExpend,
+			todayAmount,
+			todayOptimalBudget,
+			todayRiskPercentage,
+		};
 	}
 }
