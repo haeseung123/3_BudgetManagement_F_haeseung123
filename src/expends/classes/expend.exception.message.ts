@@ -8,7 +8,7 @@ export class ExpendException {
 	};
 
 	static EXPEND_NOT_EXISITS: ExceptionObj = {
-		message: '존재하지 않는 지출입니다.',
+		message: '지출이 존재하지 않습니다.',
 		error: ExceptionObjError.NOT_FOUND,
 	};
 

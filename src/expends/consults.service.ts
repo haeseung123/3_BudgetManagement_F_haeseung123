@@ -31,14 +31,22 @@ export class ConsultsService {
 
 	async generateRecommendation(user: User) {
 		const today = new Date();
-		const dateStr = today.toISOString().split('T')[0];
-		const [year, month, day] = dateStr.split('-');
-		const yearMonth = parseInt(year + month);
+		const yearMonth = parseInt(today.toISOString().split('-').slice(0, 2).join(''));
 
 		const lastDayOfMonth = new Date(today.getFullYear(), today.getMonth() + 1, 0).getDate();
 		const remainingDays = lastDayOfMonth - today.getDate();
 
 		const monthlyBudget = await this.budgetsService.findMonthlyBudget(user, yearMonth);
+		if (!monthlyBudget) throw new NotFoundException(ExpendException.BUDGET_NOT_EXISITS);
+
+		const monthlyExpend = await this.expendsService.findMonthlyExpend(user, yearMonth);
+		if (!monthlyExpend) throw new NotFoundException(ExpendException.EXPEND_NOT_EXISITS);
+
+		const remainingBudget = monthlyBudget.total_amount - monthlyExpend.total_amount;
+
+		const dailyRecommendBudget = remainingBudget > 0 ? Math.round(remainingBudget / remainingDays) : 10000;
+		const userMessage = this.generateMessage(remainingBudget);
+
 		const budgets = await this.budgetRepository.find({
 			where: {
 				monthlyBudget: { id: monthlyBudget.id },
@@ -46,9 +54,6 @@ export class ConsultsService {
 			relations: ['category'],
 		});
 
-		if (!monthlyBudget) throw new NotFoundException(ExpendException.BUDGET_NOT_EXISITS);
-
-		const monthlyExpend = await this.expendsService.findMonthlyExpend(user, yearMonth);
 		const expends = await this.expendRepository.find({
 			where: {
 				monthlyExpend: { id: monthlyExpend.id },
@@ -56,63 +61,37 @@ export class ConsultsService {
 			relations: ['category'],
 		});
 
-		// 남은 예산
-		const remainingBudget = monthlyBudget.total_amount - monthlyExpend.total_amount;
+		const categoryAmounts = await this.calculateCategoryAmounts(budgets, expends);
 
-		if (remainingBudget > 0) {
-			const dailyRecommendBudget = Math.round(remainingBudget / remainingDays);
-
-			//추천 메시지
-			const userMessage = this.generateMessage(remainingBudget);
-
-			//카테고리별 남은 예산
-			const categoryAmounts = await this.calculateCategoryAmounts(budgets, expends);
-
-			return {
-				remainingBudget,
-				userMessage,
-				dailyRecommendBudget,
-				categoryAmounts,
-			};
-		} else {
-			const dailyRecommendBudget = 10000;
-			const userMessage = this.generateMessage(remainingBudget);
-
-			return {
-				remainingBudget,
-				userMessage,
-				dailyRecommendBudget,
-			};
-		}
+		return {
+			remainingBudget,
+			userMessage,
+			dailyRecommendBudget,
+			categoryAmounts,
+		};
 	}
 
 	private async calculateCategoryAmounts(budgets: Budget[], expends: Expend[]) {
-		const categoryExpends: { category: string; totalAmount: number }[] = [];
-
-		expends.forEach((expend) => {
+		const categoryExpends = expends.reduce((acc, expend) => {
 			const categoryName = expend.category.name;
-			const existingCategory = categoryExpends.find((item) => item.category === categoryName);
+			const existingCategory = acc.find((item) => item.category === categoryName);
 
-			if (existingCategory) existingCategory.totalAmount += expend.amount;
-			else categoryExpends.push({ category: categoryName, totalAmount: expend.amount });
-		});
-
-		const budgetMap = new Map<string, Budget>();
-		budgets.forEach((budget) => {
-			budgetMap.set(budget.category.name, budget);
-		});
-
-		const remainingCategoryAmounts: any[] = [];
-
-		budgetMap.forEach((budget, category) => {
-			const expend = categoryExpends.find((item) => item.category === category);
-
-			if (expend) {
-				const remainingBudget = budget.amount - expend.totalAmount;
-				remainingCategoryAmounts.push({ category, remainingBudget });
+			if (existingCategory) {
+				existingCategory.totalAmount += expend.amount;
 			} else {
-				remainingCategoryAmounts.push({ category, remainingBudget: budget.amount });
+				acc.push({ category: categoryName, totalAmount: expend.amount });
 			}
+
+			return acc;
+		}, [] as { category: string; totalAmount: number }[]);
+
+		const budgetMap = new Map<string, Budget>(budgets.map((budget) => [budget.category.name, budget]));
+
+		const remainingCategoryAmounts = Array.from(budgetMap, ([category, budget]) => {
+			const expend = categoryExpends.find((item) => item.category === category);
+			const remainingBudget = expend ? budget.amount - expend.totalAmount : budget.amount;
+
+			return { category, remainingBudget };
 		});
 
 		return remainingCategoryAmounts;
