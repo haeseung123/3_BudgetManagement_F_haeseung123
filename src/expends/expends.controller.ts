@@ -64,6 +64,7 @@ export class ExpendsController {
 
 	@Get('consults/recommend')
 	@UseGuards(AtGuard)
+	@ResponseMessage(ExpendResponseMessage.RECOMMEND)
 	async getRecommendation(@GetUser() user: User) {
 		return await this.consultsService.generateRecommendation(user);
 	}
