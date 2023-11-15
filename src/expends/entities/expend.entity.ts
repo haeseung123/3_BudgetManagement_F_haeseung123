@@ -1,7 +1,7 @@
-import { BaseEntity } from 'src/global/entities/base.entity';
+import { BaseEntity } from '../../global/entities/base.entity';
 import { Column, Entity, JoinColumn, ManyToOne } from 'typeorm';
 import { MonthlyExpend } from './monthly_expend.entity';
-import { Category } from 'src/category/entities/category.entity';
+import { Category } from '../../category/entities/category.entity';
 import { PaymentMethod } from '../enums/payment-method.enum';
 
 @Entity()

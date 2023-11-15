@@ -1,5 +1,5 @@
-import { BaseEntity } from 'src/global/entities/base.entity';
-import { User } from 'src/users/entities/user.entity';
+import { BaseEntity } from '../../global/entities/base.entity';
+import { User } from '../../users/entities/user.entity';
 import { Column, Entity, JoinColumn, ManyToOne } from 'typeorm';
 
 @Entity({ name: 'monthly_expend' })

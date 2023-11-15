@@ -1,7 +1,7 @@
-import { BaseEntity } from 'src/global/entities/base.entity';
+import { BaseEntity } from '../../global/entities/base.entity';
 import { Column, Entity, JoinColumn, ManyToOne } from 'typeorm';
 import { MonthlyBudget } from './monthly_budget.entity';
-import { Category } from 'src/category/entities/category.entity';
+import { Category } from '../../category/entities/category.entity';
 
 @Entity()
 export class Budget extends BaseEntity {
