@@ -71,5 +71,8 @@ export class ExpendsController {
 
 	@Get('consults/today')
 	@UseGuards(AtGuard)
-	async getTodayExpend() {}
+	@ResponseMessage(ExpendResponseMessage.TODAY)
+	async getTodayExpend(@GetUser() user: User) {
+		return await this.consultsService.getTodayExpend(user);
+	}
 }
