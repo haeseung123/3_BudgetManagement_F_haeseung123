@@ -7,8 +7,18 @@ export class ExpendException {
 		error: ExceptionObjError.FORBIDDEN,
 	};
 
+	static EXPEND_DELETE_FORBIDDEN: ExceptionObj = {
+		message: '삭제 권한이 없는 사용자입니다.',
+		error: ExceptionObjError.FORBIDDEN,
+	};
+
 	static EXPEND_NOT_EXISITS: ExceptionObj = {
-		message: '존재하지 않는 지출입니다.',
+		message: '지출이 존재하지 않습니다.',
+		error: ExceptionObjError.NOT_FOUND,
+	};
+
+	static MONTHLY_EXPEND_NOT_EXISITS: ExceptionObj = {
+		message: '이번달 지출이 존재하지 않습니다.',
 		error: ExceptionObjError.NOT_FOUND,
 	};
 

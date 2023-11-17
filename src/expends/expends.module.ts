@@ -10,10 +10,11 @@ import { ConsultsService } from './consults.service';
 import { Budget } from 'src/budgets/entities/budget.entity';
 import { MonthlyBudget } from 'src/budgets/entities/monthly_budget.entity';
 import { BudgetsService } from 'src/budgets/budgets.service';
+import { StatisticsService } from './statistics.service';
 
 @Module({
 	imports: [TypeOrmModule.forFeature([Expend, MonthlyExpend, User, Category, Budget, MonthlyBudget])],
 	controllers: [ExpendsController],
-	providers: [ExpendsService, ConsultsService, BudgetsService],
+	providers: [ExpendsService, ConsultsService, BudgetsService, StatisticsService],
 })
 export class ExpendsModule {}

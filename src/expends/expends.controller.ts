@@ -24,21 +24,25 @@ import { ResponseMessage } from 'src/global/decorators/response-key.decorator';
 import { ExpendResponseMessage } from './classes/expend.response.message';
 import { GetExpendDto } from './dto/get-expend.dto';
 import { ConsultsService } from './consults.service';
+import { StatisticsService } from './statistics.service';
 
 @Controller('expends')
+@UseGuards(AtGuard)
 @UseFilters(JwtExceptionFilter, HttpExceptionFilter)
 export class ExpendsController {
-	constructor(private readonly expendsService: ExpendsService, private readonly consultsService: ConsultsService) {}
+	constructor(
+		private readonly expendsService: ExpendsService,
+		private readonly consultsService: ConsultsService,
+		private readonly statisticsService: StatisticsService,
+	) {}
 
 	@Post()
-	@UseGuards(AtGuard)
 	@ResponseMessage(ExpendResponseMessage.CREATE)
 	async createExpend(@GetUser() user: User, @Body() createExpendDto: CreateExpendDto) {
 		return await this.expendsService.createExpend(user, createExpendDto);
 	}
 
 	@Patch(':id')
-	@UseGuards(AtGuard)
 	@ResponseMessage(ExpendResponseMessage.UPDATE)
 	async updateExpend(
 		@Param('id', CustomParseUUIDPipe) id: string,
@@ -49,30 +53,32 @@ export class ExpendsController {
 	}
 
 	@Delete(':id')
-	@UseGuards(AtGuard)
 	@HttpCode(204)
 	async deleteExpend(@Param('id', CustomParseUUIDPipe) id: string, @GetUser() user: User) {
 		return await this.expendsService.deleteExpend(id, user);
 	}
 
 	@Get()
-	@UseGuards(AtGuard)
 	@ResponseMessage(ExpendResponseMessage.GET)
 	async getExpend(@Query() getExpendDto: GetExpendDto, @GetUser() user: User) {
 		return await this.expendsService.getExpend(getExpendDto, user);
 	}
 
 	@Get('consults/recommend')
-	@UseGuards(AtGuard)
 	@ResponseMessage(ExpendResponseMessage.RECOMMEND)
 	async getRecommendation(@GetUser() user: User) {
 		return await this.consultsService.generateRecommendation(user);
 	}
 
 	@Get('consults/today')
-	@UseGuards(AtGuard)
 	@ResponseMessage(ExpendResponseMessage.TODAY)
 	async getTodayExpend(@GetUser() user: User) {
 		return await this.consultsService.getTodayExpend(user);
+	}
+
+	@Get('statistics')
+	@ResponseMessage(ExpendResponseMessage.STATISTICS)
+	async getStatistics(@GetUser() user: User) {
+		return await this.statisticsService.generateStatistics(user);
 	}
 }

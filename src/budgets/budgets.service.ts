@@ -62,8 +62,11 @@ export class BudgetsService {
 				monthlyBudget: monthlyBudget,
 				amount: amount,
 			});
+		} else {
+			budget.category = category;
+			budget.monthlyBudget = monthlyBudget;
+			budget.amount = amount;
 		}
-		budget.amount = amount;
 
 		const savedBudget = await this.budgetRepository.save(budget);
 
