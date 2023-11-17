@@ -64,12 +64,12 @@ export class ExpendsService {
 			monthlyExpend = this.monthlyExpendRepository.create({
 				user: user,
 				year_month: yearMonth,
-				total_amount: 0,
+				total_amount: amount,
 			});
 			await this.monthlyExpendRepository.save(monthlyExpend);
+		} else {
+			monthlyExpend.total_amount = await this.calculateTotalAmount(amount, monthlyExpend, yearMonth);
 		}
-
-		monthlyExpend.total_amount = await this.calculateTotalAmount(amount, monthlyExpend, yearMonth);
 
 		return await this.monthlyExpendRepository.save(monthlyExpend);
 	}
@@ -83,13 +83,13 @@ export class ExpendsService {
 			where: {
 				excluded: false,
 				monthlyExpend: {
+					id: monthlyExpend.id,
 					year_month: yearMonth,
-					user: monthlyExpend.user,
 				},
 			},
 		});
 
-		const totalAmount = amounts.reduce((acc, c) => (acc += c.amount), amount);
+		const totalAmount = amounts.reduce((acc, expend) => (acc += expend.amount), amount);
 
 		return totalAmount;
 	}
@@ -166,7 +166,7 @@ export class ExpendsService {
 		const yearMonth = monthlyExpend.year_month;
 
 		const foundUser = await this.findUser(monthlyExpend);
-		if (foundUser.id !== user.id) throw new ForbiddenException(ExpendException.EXPEND_UPDATE_FORBIDDEN);
+		if (foundUser.id !== user.id) throw new ForbiddenException(ExpendException.EXPEND_DELETE_FORBIDDEN);
 
 		await this.expendRepository.remove(expend);
 
@@ -221,6 +221,8 @@ export class ExpendsService {
 	async getExpend(getExpendDto: GetExpendDto, user: User) {
 		const { month, min, max, category } = getExpendDto;
 		const monthData = await this.findMonthlyExpend(user, month);
+		if (!monthData) throw new NotFoundException(ExpendException.MONTHLY_EXPEND_NOT_EXISITS);
+
 		const totalAmount = monthData.total_amount;
 
 		const datas = await this.expendRepository.find({

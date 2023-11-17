@@ -14,10 +14,8 @@ export class ConsultsService {
 	constructor(
 		@InjectRepository(Expend)
 		private readonly expendRepository: Repository<Expend>,
-
 		@InjectRepository(Budget)
 		private readonly budgetRepository: Repository<Budget>,
-
 		private readonly expendsService: ExpendsService,
 		private readonly budgetsService: BudgetsService,
 	) {}
@@ -33,7 +31,7 @@ export class ConsultsService {
 		if (!monthlyBudget) throw new NotFoundException(ExpendException.BUDGET_NOT_EXISITS);
 
 		const monthlyExpend = await this.expendsService.findMonthlyExpend(user, yearMonth);
-		if (!monthlyExpend) throw new NotFoundException(ExpendException.EXPEND_NOT_EXISITS);
+		if (!monthlyExpend) throw new NotFoundException(ExpendException.MONTHLY_EXPEND_NOT_EXISITS);
 
 		const remainingBudget = monthlyBudget.total_amount - monthlyExpend.total_amount;
 
@@ -126,7 +124,7 @@ export class ConsultsService {
 
 		// 오늘 카테고리별 지출 금액
 		const monthlyExpend = await this.expendsService.findMonthlyExpend(user, yearMonth);
-		if (!monthlyExpend) throw new NotFoundException(ExpendException.EXPEND_NOT_EXISITS);
+		if (!monthlyExpend) throw new NotFoundException(ExpendException.MONTHLY_EXPEND_NOT_EXISITS);
 
 		const todayExpend = await this.expendRepository.find({
 			where: {
@@ -156,10 +154,10 @@ export class ConsultsService {
 			const matchingExpend = todayExpend.find((expend) => expend.category.name === categoryName);
 
 			if (matchingExpend) {
-				const riskPercentage = this.calculateRiskPercentage(budget.amount, matchingExpend.amount);
-				todayRiskPercentage.push({ category: categoryName, riskPercentage });
+				let riskPercentage = this.calculateRiskPercentage(budget.amount, matchingExpend.amount);
+				todayRiskPercentage.push({ category: categoryName, riskPercentage: `${riskPercentage}%` });
 			}
-			todayRiskPercentage.push({ category: categoryName, riskPercentage: 0 });
+			todayRiskPercentage.push({ category: categoryName, riskPercentage: '0%' });
 		});
 
 		return {
