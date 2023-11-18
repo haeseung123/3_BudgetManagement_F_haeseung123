@@ -235,7 +235,6 @@ occasion: number;
 프로젝트를 진행하며 작성한 TIL 노션페이지 입니다.
 
 [HTTP status code🔗](https://admitted-podium-88c.notion.site/status-code-3547f9fe8f4d450f806578784b5ac7a9?pvs=4)
+
 [중복되는 데코레이터 합치기🔗](https://admitted-podium-88c.notion.site/applyDecorator-5131e691a46c486c8fc588851b58308c?pvs=4)
 
-
-```
