@@ -15,12 +15,7 @@ export class StatisticsService {
 	constructor(
 		@InjectRepository(Expend)
 		private readonly expendRepository: Repository<Expend>,
-		@InjectRepository(MonthlyBudget)
-		private readonly monthlyBudgetRepository: Repository<MonthlyBudget>,
-		@InjectRepository(Budget)
-		private readonly budgetRepository: Repository<Budget>,
 		private readonly expendsService: ExpendsService,
-		private readonly budgetsService: BudgetsService,
 	) {}
 
 	async generateStatistics(user: User) {
@@ -43,7 +38,6 @@ export class StatisticsService {
 
 		//지난달 대비 소비율
 		const compareExpend = await this.calculateIncreasePercentage(currentExpend, lastMonthExpend);
-		// console.log(compareExpend);
 
 		//지난 요일 대비 소비율
 		const todayAmount = await this.getDailyExpendAmount(monthlyExpend.id, today.getDate());
@@ -53,7 +47,6 @@ export class StatisticsService {
 			oneWeekAgoExpend.id,
 			oneWeekAgoDate.getDate(),
 		);
-		console.log(compareOneWeekAgoExpend);
 
 		return {
 			comparedLastMonth: compareExpend,
@@ -95,9 +88,6 @@ export class StatisticsService {
 			totalAmount,
 		}));
 
-		// console.log(currentCategoryDatas);
-		// console.log(currentCategoryArray);
-
 		return currentCategoryArray;
 	}
 
@@ -118,9 +108,6 @@ export class StatisticsService {
 			totalAmount,
 		}));
 
-		// console.log(lastCategoryDatas);
-		// console.log(lastCategoryArray);
-
 		return lastCategoryArray;
 	}
 
@@ -138,7 +125,7 @@ export class StatisticsService {
 					100;
 				result.push({ category: currentCategory.category, increasePercentage: `${increasePercentage}%` });
 			} else {
-				result.push({ category: currentCategory.category, increasePercentage: '100% 초과' });
+				result.push({ category: currentCategory.category, increasePercentage: '' });
 			}
 		}
 
@@ -161,8 +148,6 @@ export class StatisticsService {
 	}
 
 	async compareExpendWithLastWeek(todayExpend: number, lastWeekExpendId: string, day: number): Promise<number> {
-		console.log('오늘 쓴돈', todayExpend, lastWeekExpendId, '지난주 요일', day);
-
 		const oneWeekAgoExpend = await this.getDailyExpendAmount(lastWeekExpendId, day);
 
 		return await this.calculateIncreaseOneWeekAgo(todayExpend, oneWeekAgoExpend);
